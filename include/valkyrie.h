@@ -3,7 +3,7 @@
 
 #include <libmowgli-2/mowgli.h>
 #include "platform.h"
-//#include "sysconf.h"
+#include "sysconf.h"
 //#include "stdinc.h"
 //#include "i18n.h"
 #include "common.h"
@@ -17,7 +17,7 @@
 //#include "atheme_memory.h"
 //#include "table.h"
 #include "servers.h"
-//#include "channels.h"
+#include "channels.h"
 //#include "module.h"
 //#include "crypto.h"
 //#include "culture.h"
@@ -47,6 +47,7 @@
 //#include "inline/account.h"
 //#include "inline/channels.h"
 //#include "inline/connection.h"
+//#include "mode.h"
 
 #endif /* VALKYRIE_H */
 

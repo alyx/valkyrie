@@ -1,3 +1,6 @@
+#ifndef VALKYRIE_TOOLS_H
+#define VALKYRIE_TOOLS_H
+
 #include "object.h"
 
 typedef enum {
@@ -76,7 +79,38 @@ extern void log_master_set_mask(unsigned int mask);
 extern logfile_t *logfile_find_mask(unsigned int log_mask);
 extern void slog(unsigned int level, const char *fmt, ...) PRINTFLIKE(2, 3);
 
+/* function.c */
+/* misc string stuff */
+extern void tb2sp(char *line);
+extern char *replace(char *s, int size, const char *old, const char *new);
+extern const char *number_to_string(int num);
+extern bool validhostmask(const char *host);
+extern char *pretty_mask(char *mask);
+extern bool validtopic(const char *topic);
+extern bool has_ctrl_chars(const char *text);
+extern char *sbytes(float x);
+extern float bytes(float x);
+
+extern int srename(const char *old_fn, const char *new_fn);
+#if HAVE_GETTIMEOFDAY
+extern void s_time(struct timeval *sttime);
+extern void e_time(struct timeval sttime, struct timeval *ttime);
+extern int tv2ms(struct timeval *tv);
+#endif
+extern char *time_ago(time_t event);
+extern char *timediff(time_t seconds);
+
+
 /* sharedheap.c */
 extern mowgli_heap_t *sharedheap_get(size_t size);
 extern void sharedheap_unref(mowgli_heap_t *heap);
 extern char *combine_path(const char *parent, const char *child);
+
+/* tokenize.c */
+extern int sjtoken(char *message, char delimiter, char **parv);
+extern int tokenize(char *message, char **parv);
+
+/* parse.c */
+extern void irc_parse(char *line);
+
+#endif /* VALKYRIE_TOOLS_H */

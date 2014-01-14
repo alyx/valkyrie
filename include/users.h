@@ -77,6 +77,7 @@ extern void init_users(void);
 
 extern user_t *user_add(const char *nick, const char *user, const char *host, const char *vhost, const char *ip, const char *uid, const char *gecos, server_t *server, time_t ts);
 extern user_t *user_add_internal(const char *uid);
+extern void user_internal_registered(user_t *u);
 extern void user_delete(user_t *u, const char *comment);
 extern user_t *user_find(const char *nick);
 extern user_t *user_find_named(const char *nick);

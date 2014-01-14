@@ -20,6 +20,10 @@ struct me
         time_t currtime;
         int maxfd;
     } state;
+    struct {
+        int server;
+        int tld;
+    } cnt;
     server_t *me;
 } me;
 #endif

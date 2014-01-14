@@ -22,6 +22,7 @@
  */
 
 #include "valkyrie.h"
+#include "mode.h"
 
 mowgli_heap_t *user_heap;
 
@@ -44,16 +45,16 @@ mowgli_patricia_t *uidlist;
  */
 void init_users(void)
 {
-	user_heap = sharedheap_get(sizeof(user_t));
+    user_heap = sharedheap_get(sizeof(user_t));
 
-	if (user_heap == NULL)
-	{
-		slog(LG_DEBUG, "init_users(): block allocator failure.");
-		exit(EXIT_FAILURE);
-	}
+    if (user_heap == NULL)
+    {
+        slog(LG_DEBUG, "init_users(): block allocator failure.");
+        exit(EXIT_FAILURE);
+    }
 
-	userlist = mowgli_patricia_create(irccasecanon);
-	uidlist = mowgli_patricia_create(noopcanon);
+    userlist = mowgli_patricia_create(irccasecanon);
+    uidlist = mowgli_patricia_create(noopcanon);
 }
 
 /*
@@ -82,108 +83,108 @@ void init_users(void)
  *     - if unsuccessful, a kill has been sent if necessary
  */
 user_t *user_add(const char *nick, const char *user, const char *host, 
-	const char *vhost, const char *ip, const char *uid, const char *gecos, 
-	server_t *server, time_t ts)
+        const char *vhost, const char *ip, const char *uid, const char *gecos, 
+        server_t *server, time_t ts)
 {
-	user_t *u, *u2;
-	hook_user_nick_t hdata;
+    user_t *u, *u2;
+    hook_user_nick_t hdata;
 
-	slog(LG_DEBUG, "user_add(): %s (%s@%s) -> %s", nick, user, host, server->name);
+    slog(LG_DEBUG, "user_add(): %s (%s@%s) -> %s", nick, user, host, server->name);
 
-	u2 = user_find_named(nick);
-	if (u2 != NULL)
-	{
-		if (server == me.me)
-		{
-			/* caller should not let this happen */
-			slog(LG_ERROR, "user_add(): tried to add local nick %s which already exists", nick);
-			return NULL;
-		}
-		slog(LG_INFO, "user_add(): nick collision on %s", nick);
-		if (u2->server == me.me)
-		{
-			if (uid != NULL)
-			{
-				/* If the new client has a UID, our
-				 * client will have a UID too and the
-				 * remote server will send us a kill
-				 * if it kills our client.  So just kill
-				 * their client and continue.
-				 */
-				/*kill_id_sts(NULL, uid, "Nick collision with services (new)");*/
-				return NULL;
-			}
-			if (ts == u2->ts || ((ts < u2->ts) ^ (!irccasecmp(user, u2->user) && !irccasecmp(host, u2->host))))
-			{
-				/* If the TSes are equal, or if their TS
-				 * is less than our TS and the u@h differs,
-				 * or if our TS is less than their TS and
-				 * the u@h is equal, our client will be
-				 * killed.
-				 *
-				 * Hope that a kill has arrived just before
-				 * for our client; we will have reintroduced
-				 * it.
-				 */
-				return NULL;
-			}
-			else /* Our client will not be killed. */
-				return NULL;
-		}
-		else
-		{
-			/*wallops("Server %s is introducing nick %s which already exists on %s",*/
-					/*server->name, nick, u2->server->name);*/
-			if (uid != NULL && u2->uid != NULL)
-			{
-				/*kill_id_sts(NULL, uid, "Ghost detected via nick collision (new)");*/
-				/*kill_id_sts(NULL, u2->uid, "Ghost detected via nick collision (old)");*/
-				user_delete(u2, "Ghost detected via nick collision (old)");
-			}
-			else
-			{
-				/* There is no way we can do this properly. */
-				/*kill_id_sts(NULL, nick, "Ghost detected via nick collision");*/
-				user_delete(u2, "Ghost detected via nick collision");
-			}
-			return NULL;
-		}
-	}
+    u2 = user_find_named(nick);
+    if (u2 != NULL)
+    {
+        if (server == me.me)
+        {
+            /* caller should not let this happen */
+            slog(LG_ERROR, "user_add(): tried to add local nick %s which already exists", nick);
+            return NULL;
+        }
+        slog(LG_INFO, "user_add(): nick collision on %s", nick);
+        if (u2->server == me.me)
+        {
+            if (uid != NULL)
+            {
+                /* If the new client has a UID, our
+                 * client will have a UID too and the
+                 * remote server will send us a kill
+                 * if it kills our client.  So just kill
+                 * their client and continue.
+                 */
+                /*kill_id_sts(NULL, uid, "Nick collision with services (new)");*/
+                return NULL;
+            }
+            if (ts == u2->ts || ((ts < u2->ts) ^ (!irccasecmp(user, u2->user) && !irccasecmp(host, u2->host))))
+            {
+                /* If the TSes are equal, or if their TS
+                 * is less than our TS and the u@h differs,
+                 * or if our TS is less than their TS and
+                 * the u@h is equal, our client will be
+                 * killed.
+                 *
+                 * Hope that a kill has arrived just before
+                 * for our client; we will have reintroduced
+                 * it.
+                 */
+                return NULL;
+            }
+            else /* Our client will not be killed. */
+                return NULL;
+        }
+        else
+        {
+            /*wallops("Server %s is introducing nick %s which already exists on %s",*/
+            /*server->name, nick, u2->server->name);*/
+            if (uid != NULL && u2->uid != NULL)
+            {
+                /*kill_id_sts(NULL, uid, "Ghost detected via nick collision (new)");*/
+                /*kill_id_sts(NULL, u2->uid, "Ghost detected via nick collision (old)");*/
+                user_delete(u2, "Ghost detected via nick collision (old)");
+            }
+            else
+            {
+                /* There is no way we can do this properly. */
+                /*kill_id_sts(NULL, nick, "Ghost detected via nick collision");*/
+                user_delete(u2, "Ghost detected via nick collision");
+            }
+            return NULL;
+        }
+    }
 
-	u = mowgli_heap_alloc(user_heap);
-	object_init(object(u), nick, (destructor_t) user_delete);
+    u = mowgli_heap_alloc(user_heap);
+    object_init(object(u), nick, (destructor_t) user_delete);
 
-	if (uid != NULL)
-	{
-		u->uid = strshare_get(uid);
-		mowgli_patricia_add(uidlist, u->uid, u);
-	}
+    if (uid != NULL)
+    {
+        u->uid = strshare_get(uid);
+        mowgli_patricia_add(uidlist, u->uid, u);
+    }
 
-	u->nick = strshare_get(nick);
-	u->user = strshare_get(user);
-	u->host = strshare_get(host);
-	u->gecos = strshare_get(gecos);
-	u->chost = strshare_get(vhost ? vhost : host);
-	u->vhost = strshare_get(vhost ? vhost : host);
+    u->nick = strshare_get(nick);
+    u->user = strshare_get(user);
+    u->host = strshare_get(host);
+    u->gecos = strshare_get(gecos);
+    u->chost = strshare_get(vhost ? vhost : host);
+    u->vhost = strshare_get(vhost ? vhost : host);
 
-	if (ip && strcmp(ip, "0") && strcmp(ip, "0.0.0.0") && strcmp(ip, "255.255.255.255"))
-		u->ip = strshare_get(ip);
+    if (ip && strcmp(ip, "0") && strcmp(ip, "0.0.0.0") && strcmp(ip, "255.255.255.255"))
+        u->ip = strshare_get(ip);
 
-	u->server = server;
-	u->server->users++;
-	mowgli_node_add(u, &u->snode, &u->server->userlist);
+    u->server = server;
+    u->server->users++;
+    mowgli_node_add(u, &u->snode, &u->server->userlist);
 
-	u->ts = ts ? ts : CURRTIME;
+    u->ts = ts ? ts : CURRTIME;
 
-	mowgli_patricia_add(userlist, u->nick, u);
+    mowgli_patricia_add(userlist, u->nick, u);
 
-	cnt.user++;
+    /*cnt.user++;*/
 
-	hdata.u = u;
-	hdata.oldnick = NULL;
-	/*hook_call_user_add(&hdata);*/
+    hdata.u = u;
+    hdata.oldnick = NULL;
+    /*hook_call_user_add(&hdata);*/
 
-	return hdata.u;
+    return hdata.u;
 }
 
 /*
@@ -203,87 +204,59 @@ user_t *user_add(const char *nick, const char *user, const char *host,
  */
 void user_delete(user_t *u, const char *comment)
 {
-	mowgli_node_t *n, *tn;
-	chanuser_t *cu;
-	mynick_t *mn;
-	char oldnick[NICKLEN];
-	bool doenforcer = false;
+    mowgli_node_t *n, *tn;
+    chanuser_t *cu;
+    char oldnick[NICKLEN];
+    bool doenforcer = false;
 
-	return_if_fail(u != NULL);
+    return_if_fail(u != NULL);
 
-	if (u->flags & UF_DOENFORCE)
-	{
-		doenforcer = true;
-		mowgli_strlcpy(oldnick, u->nick, sizeof oldnick);
-		u->flags &= ~UF_DOENFORCE;
-	}
+    if (!comment)
+        comment = "";
 
-	if (!comment)
-		comment = "";
+    slog(LG_DEBUG, "user_delete(): removing user: %s -> %s (%s)", u->nick, u->server->name, comment);
 
-	slog(LG_DEBUG, "user_delete(): removing user: %s -> %s (%s)", u->nick, u->server->name, comment);
+    /*hook_call_user_delete_info((&(hook_user_delete_t){ .u = u,*/
+    /*.comment = comment}));*/
+    /*hook_call_user_delete(u);*/
 
-	hook_call_user_delete_info((&(hook_user_delete_t){ .u = u,
-				.comment = comment}));
-	hook_call_user_delete(u);
+    u->server->users--;
+    if (is_ircop(u))
+        u->server->opers--;
+    if (u->flags & UF_INVIS)
+        u->server->invis--;
 
-	u->server->users--;
-	if (is_ircop(u))
-		u->server->opers--;
-	if (u->flags & UF_INVIS)
-		u->server->invis--;
+    if (u->certfp != NULL)
+        free(u->certfp);
 
-	if (u->certfp != NULL)
-		free(u->certfp);
+    /* remove the user from each channel */
+    MOWGLI_ITER_FOREACH_SAFE(n, tn, u->channels.head)
+    {
+        cu = (chanuser_t *)n->data;
 
-	/* remove the user from each channel */
-	MOWGLI_ITER_FOREACH_SAFE(n, tn, u->channels.head)
-	{
-		cu = (chanuser_t *)n->data;
+        /*chanuser_delete(cu->chan, u);*/
+    }
 
-		chanuser_delete(cu->chan, u);
-	}
+    mowgli_patricia_delete(userlist, u->nick);
 
-	mowgli_patricia_delete(userlist, u->nick);
+    if (u->uid != NULL)
+        mowgli_patricia_delete(uidlist, u->uid);
 
-	if (u->uid != NULL)
-		mowgli_patricia_delete(uidlist, u->uid);
+    mowgli_node_delete(&u->snode, &u->server->userlist);
 
-	mowgli_node_delete(&u->snode, &u->server->userlist);
+    strshare_unref(u->uid);
+    strshare_unref(u->nick);
+    strshare_unref(u->user);
+    strshare_unref(u->host);
+    strshare_unref(u->gecos);
+    strshare_unref(u->vhost);
+    strshare_unref(u->chost);
+    strshare_unref(u->ip);
 
-	if (u->myuser)
-	{
-		MOWGLI_ITER_FOREACH_SAFE(n, tn, u->myuser->logins.head)
-		{
-			if (n->data == u)
-			{
-				mowgli_node_delete(n, &u->myuser->logins);
-				mowgli_node_free(n);
-				break;
-			}
-		}
-		u->myuser->lastlogin = CURRTIME;
-		if ((mn = mynick_find(u->nick)) != NULL &&
-				mn->owner == u->myuser)
-			mn->lastseen = CURRTIME;
-		u->myuser = NULL;
-	}
+    mowgli_heap_free(user_heap, u);
 
-	strshare_unref(u->uid);
-	strshare_unref(u->nick);
-	strshare_unref(u->user);
-	strshare_unref(u->host);
-	strshare_unref(u->gecos);
-	strshare_unref(u->vhost);
-	strshare_unref(u->chost);
-	strshare_unref(u->ip);
+    /*cnt.user--;*/
 
-	mowgli_heap_free(user_heap, u);
-
-	cnt.user--;
-
-	if (doenforcer)
-		introduce_enforcer(oldnick);
 }
 
 /*
@@ -303,28 +276,13 @@ void user_delete(user_t *u, const char *comment)
  */
 user_t *user_find(const char *nick)
 {
-	user_t *u;
+    user_t *u;
 
-	return_val_if_fail(nick != NULL, NULL);
+    return_val_if_fail(nick != NULL, NULL);
 
-	if (ircd->uses_uid)
-	{
-		u = mowgli_patricia_retrieve(uidlist, nick);
+    u = mowgli_patricia_retrieve(uidlist, nick);
 
-		if (u != NULL)
-			return u;
-	}
-
-	u = mowgli_patricia_retrieve(userlist, nick);
-
-	if (u != NULL)
-	{
-		if (ircd->uses_p10)
-			wallops(_("user_find(): found user %s by nick!"), nick);
-		return u;
-	}
-
-	return NULL;
+    return u;
 }
 
 /*
@@ -344,7 +302,7 @@ user_t *user_find(const char *nick)
  */
 user_t *user_find_named(const char *nick)
 {
-	return mowgli_patricia_retrieve(userlist, nick);
+    return mowgli_patricia_retrieve(userlist, nick);
 }
 
 /*
@@ -364,16 +322,16 @@ user_t *user_find_named(const char *nick)
  */
 void user_changeuid(user_t *u, const char *uid)
 {
-	return_if_fail(u != NULL);
+    return_if_fail(u != NULL);
 
-	if (u->uid != NULL)
-		mowgli_patricia_delete(uidlist, u->uid);
+    if (u->uid != NULL)
+        mowgli_patricia_delete(uidlist, u->uid);
 
-	strshare_unref(u->uid);
-	u->uid = strshare_get(uid);
+    strshare_unref(u->uid);
+    u->uid = strshare_get(uid);
 
-	if (u->uid != NULL)
-		mowgli_patricia_add(uidlist, u->uid, u);
+    if (u->uid != NULL)
+        mowgli_patricia_add(uidlist, u->uid, u);
 }
 
 /*
@@ -395,117 +353,105 @@ void user_changeuid(user_t *u, const char *uid)
  */
 bool user_changenick(user_t *u, const char *nick, time_t ts)
 {
-	mynick_t *mn;
-	user_t *u2;
-	char oldnick[NICKLEN];
-	bool doenforcer = false;
-	hook_user_nick_t hdata;
+    user_t *u2;
+    char oldnick[NICKLEN];
+    bool doenforcer = false;
+    hook_user_nick_t hdata;
 
-	return_val_if_fail(u != NULL, false);
-	return_val_if_fail(nick != NULL, false);
+    return_val_if_fail(u != NULL, false);
+    return_val_if_fail(nick != NULL, false);
 
-	mowgli_strlcpy(oldnick, u->nick, sizeof oldnick);
-	u2 = user_find_named(nick);
-	if (u->flags & UF_DOENFORCE && u2 != u)
-	{
-		doenforcer = true;
-		u->flags &= ~UF_DOENFORCE;
-	}
-	if (u2 != NULL && u2 != u)
-	{
-		if (u->server == me.me)
-		{
-			/* caller should not let this happen */
-			slog(LG_ERROR, "user_changenick(): tried to change local nick %s to %s which already exists", u->nick, nick);
-			return false;
-		}
-		slog(LG_INFO, "user_changenick(): nick collision on %s", nick);
-		if (u2->server == me.me)
-		{
-			if (u->uid != NULL)
-			{
-				/* If the changing client has a UID, our
-				 * client will have a UID too and the
-				 * remote server will send us a kill
-				 * if it kills our client.  So just kill
-				 * their client and continue.
-				 */
-				kill_id_sts(NULL, u->uid, "Nick change collision with services");
-				user_delete(u, "Nick change collision with services");
-				return true;
-			}
-			if (ts == u2->ts || ((ts < u2->ts) ^ (!irccasecmp(u->user, u2->user) && !irccasecmp(u->host, u2->host))))
-			{
-				/* If the TSes are equal, or if their TS
-				 * is less than our TS and the u@h differs,
-				 * or if our TS is less than their TS and
-				 * the u@h is equal, our client will be
-				 * killed.
-				 *
-				 * Hope that a kill has arrived just before
-				 * for our client; we will have reintroduced
-				 * it.
-				 * But kill the changing client using its
-				 * old nick.
-				 */
-				kill_id_sts(NULL, u->nick, "Nick change collision with services");
-				user_delete(u, "Nick change collision with services");
-				return true;
-			}
-			else
-			{
-				/* Our client will not be killed.
-				 * But kill the changing client using its
-				 * old nick.
-				 */
-				kill_id_sts(NULL, u->nick, "Nick change collision with services");
-				user_delete(u, "Nick change collision with services");
-				return true;
-			}
-		}
-		else
-		{
-			wallops("Server %s is sending nick change from %s to %s which already exists on %s",
-					u->server->name, u->nick, nick,
-					u2->server->name);
-			if (u->uid != NULL && u2->uid != NULL)
-			{
-				kill_id_sts(NULL, u->uid, "Ghost detected via nick change collision (new)");
-				kill_id_sts(NULL, u2->uid, "Ghost detected via nick change collision (old)");
-				user_delete(u, "Ghost detected via nick change collision (new)");
-				user_delete(u2, "Ghost detected via nick change collision (old)");
-			}
-			else
-			{
-				/* There is no way we can do this properly. */
-				kill_id_sts(NULL, u->nick, "Ghost detected via nick change collision");
-				kill_id_sts(NULL, nick, "Ghost detected via nick change collision");
-				user_delete(u, "Ghost detected via nick change collision");
-				user_delete(u2, "Ghost detected via nick change collision");
-			}
-			return true;
-		}
-	}
-	if (u->myuser != NULL && (mn = mynick_find(u->nick)) != NULL &&
-			mn->owner == u->myuser)
-		mn->lastseen = CURRTIME;
-	mowgli_patricia_delete(userlist, u->nick);
+    mowgli_strlcpy(oldnick, u->nick, sizeof oldnick);
+    u2 = user_find_named(nick);
+    if (u2 != NULL && u2 != u)
+    {
+        if (u->server == me.me)
+        {
+            /* caller should not let this happen */
+            slog(LG_ERROR, "user_changenick(): tried to change local nick %s to %s which already exists", u->nick, nick);
+            return false;
+        }
+        slog(LG_INFO, "user_changenick(): nick collision on %s", nick);
+        if (u2->server == me.me)
+        {
+            if (u->uid != NULL)
+            {
+                /* If the changing client has a UID, our
+                 * client will have a UID too and the
+                 * remote server will send us a kill
+                 * if it kills our client.  So just kill
+                 * their client and continue.
+                 */
+                /*kill_id_sts(NULL, u->uid, "Nick change collision with services");*/
+                user_delete(u, "Nick change collision with services");
+                return true;
+            }
+            if (ts == u2->ts || ((ts < u2->ts) ^ (!irccasecmp(u->user, u2->user) && !irccasecmp(u->host, u2->host))))
+            {
+                /* If the TSes are equal, or if their TS
+                 * is less than our TS and the u@h differs,
+                 * or if our TS is less than their TS and
+                 * the u@h is equal, our client will be
+                 * killed.
+                 *
+                 * Hope that a kill has arrived just before
+                 * for our client; we will have reintroduced
+                 * it.
+                 * But kill the changing client using its
+                 * old nick.
+                 */
+                /*kill_id_sts(NULL, u->nick, "Nick change collision with services");*/
+                user_delete(u, "Nick change collision with services");
+                return true;
+            }
+            else
+            {
+                /* Our client will not be killed.
+                 * But kill the changing client using its
+                 * old nick.
+                 */
+                /*kill_id_sts(NULL, u->nick, "Nick change collision with services");*/
+                user_delete(u, "Nick change collision with services");
+                return true;
+            }
+        }
+        else
+        {
+            /*wallops("Server %s is sending nick change from %s to %s which already exists on %s",*/
+                    /*u->server->name, u->nick, nick,*/
+                    /*u2->server->name);*/
+            if (u->uid != NULL && u2->uid != NULL)
+            {
+                /*kill_id_sts(NULL, u->uid, "Ghost detected via nick change collision (new)");*/
+                /*kill_id_sts(NULL, u2->uid, "Ghost detected via nick change collision (old)");*/
+                user_delete(u, "Ghost detected via nick change collision (new)");
+                user_delete(u2, "Ghost detected via nick change collision (old)");
+            }
+            else
+            {
+                /* There is no way we can do this properly. */
+                /*kill_id_sts(NULL, u->nick, "Ghost detected via nick change collision");*/
+                /*kill_id_sts(NULL, nick, "Ghost detected via nick change collision");*/
+                user_delete(u, "Ghost detected via nick change collision");
+                user_delete(u2, "Ghost detected via nick change collision");
+            }
+            return true;
+        }
+    }
+    mowgli_patricia_delete(userlist, u->nick);
 
-	strshare_unref(u->nick);
-	u->nick = strshare_get(nick);
+    strshare_unref(u->nick);
+    u->nick = strshare_get(nick);
 
-	u->ts = ts;
+    u->ts = ts;
 
-	mowgli_patricia_add(userlist, u->nick, u);
+    mowgli_patricia_add(userlist, u->nick, u);
 
-	if (doenforcer)
-		introduce_enforcer(oldnick);
+    hdata.u = u;
+    hdata.oldnick = oldnick;
+    /*hook_call_user_nickchange(&hdata);*/
 
-	hdata.u = u;
-	hdata.oldnick = oldnick;
-	hook_call_user_nickchange(&hdata);
-
-	return hdata.u == NULL;
+    return hdata.u == NULL;
 }
 
 /*
@@ -528,62 +474,62 @@ bool user_changenick(user_t *u, const char *nick, time_t ts)
  */
 void user_mode(user_t *user, const char *modes)
 {
-	int dir = MTYPE_ADD;
-	bool was_ircop, was_invis;
-	int iter;
+    int dir = MTYPE_ADD;
+    bool was_ircop, was_invis;
+    int iter;
 
-	return_if_fail(user != NULL);
-	return_if_fail(modes != NULL);
+    return_if_fail(user != NULL);
+    return_if_fail(modes != NULL);
 
-	was_ircop = is_ircop(user);
-	was_invis = (user->flags & UF_INVIS);
+    was_ircop = is_ircop(user);
+    was_invis = (user->flags & UF_INVIS);
 
-	while (*modes != '\0')
-	{
-		switch (*modes)
-		{
-		  case '+':
-			  dir = MTYPE_ADD;
-			  break;
-		  case '-':
-			  dir = MTYPE_DEL;
-			  break;
-		  default:
-			  for (iter = 0; user_mode_list[iter].mode != '\0'; iter++)
-			  {
-				  if (*modes == user_mode_list[iter].mode)
-				  {
-					  if (dir == MTYPE_ADD)
-						  user->flags |= user_mode_list[iter].value;
-					  else
-						  user->flags &= ~user_mode_list[iter].value;
-				  }
-			  }
-			  break;
-		}
-		modes++;
-	}
+    while (*modes != '\0')
+    {
+        switch (*modes)
+        {
+            case '+':
+                dir = MTYPE_ADD;
+                break;
+            case '-':
+                dir = MTYPE_DEL;
+                break;
+            default:
+                for (iter = 0; user_mode_list[iter].mode != '\0'; iter++)
+                {
+                    if (*modes == user_mode_list[iter].mode)
+                    {
+                        if (dir == MTYPE_ADD)
+                            user->flags |= user_mode_list[iter].value;
+                        else
+                            user->flags &= ~user_mode_list[iter].value;
+                    }
+                }
+                break;
+        }
+        modes++;
+    }
 
-	/* update stats and do appropriate hooks... */
-	if (!was_invis && (user->flags & UF_INVIS))
-		user->server->invis++;
-	else if (was_invis && !(user->flags & UF_INVIS))
-		user->server->invis--;
+    /* update stats and do appropriate hooks... */
+    if (!was_invis && (user->flags & UF_INVIS))
+        user->server->invis++;
+    else if (was_invis && !(user->flags & UF_INVIS))
+        user->server->invis--;
 
-	if (!was_ircop && is_ircop(user))
-	{
-		slog(LG_DEBUG, "user_mode(): %s is now an IRCop", user->nick);
-		slog(LG_INFO, "OPER: \2%s\2 (\2%s\2)", user->nick, user->server->name);
-		user->server->opers++;
-		hook_call_user_oper(user);
-	}
-	else if (was_ircop && !is_ircop(user))
-	{
-		slog(LG_DEBUG, "user_mode(): %s is no longer an IRCop", user->nick);
-		slog(LG_INFO, "DEOPER: \2%s\2 (\2%s\2)", user->nick, user->server->name);
-		user->server->opers--;
-		hook_call_user_deoper(user);
-	}
+    if (!was_ircop && is_ircop(user))
+    {
+        slog(LG_DEBUG, "user_mode(): %s is now an IRCop", user->nick);
+        slog(LG_INFO, "OPER: \2%s\2 (\2%s\2)", user->nick, user->server->name);
+        user->server->opers++;
+        /*hook_call_user_oper(user);*/
+    }
+    else if (was_ircop && !is_ircop(user))
+    {
+        slog(LG_DEBUG, "user_mode(): %s is no longer an IRCop", user->nick);
+        slog(LG_INFO, "DEOPER: \2%s\2 (\2%s\2)", user->nick, user->server->name);
+        user->server->opers--;
+        /*hook_call_user_deoper(user);*/
+    }
 }
 
 /*
@@ -604,38 +550,38 @@ void user_mode(user_t *user, const char *modes)
  */
 void user_sethost(user_t *source, user_t *target, stringref host)
 {
-	return_if_fail(source != NULL);
-	return_if_fail(target != NULL);
-	return_if_fail(host != NULL);
+    return_if_fail(source != NULL);
+    return_if_fail(target != NULL);
+    return_if_fail(host != NULL);
 
-	if (*host == '\0')
-	{
-		slog(LG_INFO, "user_sethost(): eh?  trying to set a blank vhost on %s", target->nick);
-		return;
-	}
+    if (*host == '\0')
+    {
+        slog(LG_INFO, "user_sethost(): eh?  trying to set a blank vhost on %s", target->nick);
+        return;
+    }
 
-	strshare_unref(target->vhost);
-	target->vhost = strshare_get(host);
+    strshare_unref(target->vhost);
+    target->vhost = strshare_get(host);
 
-	/*sethost_sts(source, target, target->vhost);*/
-	/*hook_call_user_sethost(target);*/
+    /*sethost_sts(source, target, target->vhost);*/
+    /*hook_call_user_sethost(target);*/
 }
 
 const char *user_get_umodestr(user_t *u)
 {
-	static char result[34];
-	int iter;
-	int i;
+    static char result[34];
+    int iter;
+    int i;
 
-	return_val_if_fail(u != NULL, NULL);
+    return_val_if_fail(u != NULL, NULL);
 
-	i = 0;
-	result[i++] = '+';
-	for (iter = 0; user_mode_list[iter].mode != '\0'; iter++)
-		if (u->flags & user_mode_list[iter].value)
-			result[i++] = user_mode_list[iter].mode;
-	result[i] = '\0';
-	return result;
+    i = 0;
+    result[i++] = '+';
+    for (iter = 0; user_mode_list[iter].mode != '\0'; iter++)
+        if (u->flags & user_mode_list[iter].value)
+            result[i++] = user_mode_list[iter].mode;
+    result[i] = '\0';
+    return result;
 }
 
 /* vim:cinoptions=>s,e0,n0,f0,{0,}0,^0,=s,ps,t0,c3,+s,(2s,us,)20,*30,gs,hs

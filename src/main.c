@@ -10,6 +10,7 @@ static void handle_recv(connection_t *cptr)
     int i;
 
     i = recvq_getline(cptr, buf, sizeof buf - 1);
+    buf[i] = '\0';
     MOWGLI_LIST_FOREACH_SAFE(n, tn, connection_list.head)
     {
         target = (connection_t *)n->data;
@@ -17,6 +18,7 @@ static void handle_recv(connection_t *cptr)
             continue;
         sendq_add(target, buf, i);
     }
+    irc_parse(buf);
 }
 
 
@@ -27,10 +29,17 @@ static void do_listen(connection_t *cptr)
     newptr->recvq_handler = handle_recv;
 }
 
+void init_valkyrie(void)
+{
+    log_open();
+    init_servers();
+}
+
 int main(int argc, char *argv[])
 {
     log_path = "valkyrie.log";
 
+    init_valkyrie();
 	me.base_eventloop = mowgli_eventloop_create();
     me.me = server_add("valkyrie.plexbox.co.uk", 0, NULL, "42X", "Valkyrie Test Server");
 

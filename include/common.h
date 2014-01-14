@@ -20,14 +20,18 @@ typedef struct chanuser_ chanuser_t;
 typedef struct chanban_ chanban_t;
 
 typedef struct operclass_ operclass_t;
-typedef struct soper_ soper_t;
-typedef struct myuser_ myuser_t;
-typedef struct mynick_ mynick_t;
-typedef struct mychan_ mychan_t;
 
 typedef struct service_ service_t;
 
 typedef struct sourceinfo_ sourceinfo_t;
+
+struct client_ {
+    bool server;
+    union {
+        user_t *su;
+        server_t *s;
+    };
+};
 
 /* D E F I N E S */
 typedef enum {
