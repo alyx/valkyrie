@@ -295,7 +295,6 @@ BUILDSYS_TOUCH_DEPS
 AC_OUTPUT([
 	buildsys.mk
 	extra.mk
-	valkyrie-ircd.pc
 ])
 
 d=`eval echo ${MODDIR}`
