@@ -1,4 +1,4 @@
-SUBDIRS=$(LIBMOWGLI) include modules src
+SUBDIRS=$(LIBMOWGLI) src
 CLEANDIRS = ${SUBDIRS}
 DISTCLEAN = extra.mk buildsys.mk config.log config.status valkyrie-ircd.pc
 
